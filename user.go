@@ -1,7 +1,7 @@
 package todo
 
 type User struct {
-	Id int `json:"id"`
+	Id int `json:"id" db:"id"`
 
 	// Make next fields required
 	Name     string `json:"name" binding:"required"`
