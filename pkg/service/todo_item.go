@@ -20,5 +20,5 @@ func (s *TodoItemService) Create(userId int, listId int, input todo.TodoItem) (i
 		return 0, err
 	}
 
-	return s.repo.Create(userId, listId, input)
+	return s.repo.Create(listId, input)
 }
