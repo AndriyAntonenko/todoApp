@@ -38,5 +38,5 @@ func (r *TodoItemPostgres) Create(userId, listId int, input todo.TodoItem) (int,
 		return 0, err
 	}
 
-	return itemId, nil
+	return itemId, tx.Commit()
 }
