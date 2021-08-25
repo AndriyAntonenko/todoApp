@@ -2,9 +2,11 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	todo "github.com/AndriyAntonenko/todoApp"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type TodoItemPostgres struct {
@@ -69,5 +71,43 @@ func (r *TodoItemPostgres) Delete(userId, itemId int) error {
 						WHERE ti.id = $1 AND ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $2`,
 		todoItemsTable, listsItemsTable, usersListTable)
 	_, err := r.db.Exec(query, itemId, userId)
+	return err
+}
+
+func (r *TodoItemPostgres) Update(userId, itemId int, input todo.UpdateItemInput) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if input.Title != nil {
+		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
+		args = append(args, *input.Title)
+		argId++
+	}
+
+	if input.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
+		args = append(args, *input.Description)
+		argId++
+	}
+
+	if input.Done != nil {
+		setValues = append(setValues, fmt.Sprintf("done=$%d", argId))
+		args = append(args, *input.Done)
+		argId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf(`UPDATE %s ti SET %s FROM %s li, %s ul	
+							WHERE ti.id = $%d AND ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $%d`,
+		todoItemsTable, setQuery, listsItemsTable, usersListTable, argId, argId+1)
+
+	args = append(args, itemId, userId)
+
+	logrus.Debugf("updateQuery: %s", query)
+	logrus.Debugf("args: %s", args)
+
+	_, err := r.db.Exec(query, args...)
 	return err
 }
